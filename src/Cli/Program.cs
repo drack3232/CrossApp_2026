@@ -2,7 +2,7 @@
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 Console.WriteLine("DrackDrop");
-Console.WriteLine("Студент: Сенів Артем, група ФЕІ-35");
+Console.WriteLine("Студент: Сенів Артем, група ФЕІ-36");
 Console.WriteLine(new string('-', 52));
 Console.WriteLine($"ОС (OSDescription)  : {RuntimeInformation.OSDescription}");
 Console.WriteLine($"ОС (Environment)    : {Environment.OSVersion}");
