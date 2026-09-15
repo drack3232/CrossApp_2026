@@ -8,6 +8,14 @@ Purpose: Processing delivery orders and calculating total amounts
 ## Environment
 .NET SDK 10.0, Arch Linux x64
 
+## Subject Area (Domain)
+**Project:** DrackDrop (delivery app, Glovo analog)
+**Domain:** Orders
+**Main Entities:** Customer, Product, Order, OrderLine.
+- `Core/Dto/` — record types for data transfer (e.g., ProductDto, OrderDto).
+- `Core/Domain/` — entities with behavior and invariants.
+- `Core/Storage/` — storage implementations.
+- 
 ## Run
 ```bash
 dotnet build
@@ -18,3 +26,4 @@ dotnet run --project src/Cli
 |-----------|---------------------|----------------|------------------|
 | linux-x64 | self-contained      | ~80 МБ         | ні               |
 | linux-x64 | framework-dependent | 132 КБ         | так (.NET 10)    |
+
