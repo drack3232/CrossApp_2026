@@ -20,6 +20,8 @@ Purpose: Processing delivery orders and calculating total amounts
 ```bash
 dotnet build
 dotnet run --project src/Cli
+OR
+./src/Cli/bin/Release/net10.0/linux-x64/publish/Cli
 
 ## Порівняння режимів публікації
 | RID       | Режим               | Розмір publish | Потрібен runtime |
