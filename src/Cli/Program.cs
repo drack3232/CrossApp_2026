@@ -13,5 +13,6 @@ Console.WriteLine($"Архітектура     : {report.ProcessArchitecture}");
 Console.WriteLine($"RID (визначено) : {report.DetectedRid}");
 Console.WriteLine($"RID (від .NET)  : {report.ReportedRid}");
 Console.WriteLine($"Каталог         : {report.BaseDirectory}");
+Console.WriteLine($"Нотатка збірки  : {report.BuildNote}");
 Console.WriteLine(new string('-', 52));
 Console.WriteLine("Предметна область: Замовлення (Customer, Product, Order, OrderLine)");

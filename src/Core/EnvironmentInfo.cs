@@ -8,17 +8,28 @@ public sealed record EnvironmentReport(
     string ProcessArchitecture,
     string DetectedRid,
     string ReportedRid,
-    string BaseDirectory);
+    string BaseDirectory,
+    string BuildNote);
 
 public static class EnvironmentInfo
 {
-    public static EnvironmentReport Collect() => new(
-        RuntimeInformation.OSDescription,
-        RuntimeInformation.FrameworkDescription,
-        RuntimeInformation.ProcessArchitecture.ToString(),
-        DetectRid(),
-        RuntimeInformation.RuntimeIdentifier,
-        AppContext.BaseDirectory);
+    public static EnvironmentReport Collect()
+    {
+#if NET10_0_OR_GREATER
+        const string BuildNote = "збірка під net10.0";
+#else
+        const string BuildNote = "збірка під net8.0";
+#endif
+
+        return new EnvironmentReport(
+            RuntimeInformation.OSDescription,
+            RuntimeInformation.FrameworkDescription,
+            RuntimeInformation.ProcessArchitecture.ToString(),
+            DetectRid(),
+            RuntimeInformation.RuntimeIdentifier,
+            AppContext.BaseDirectory,
+            BuildNote); 
+    }
 
     private static string DetectRid()
     {
@@ -28,7 +39,7 @@ public static class EnvironmentInfo
             RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "osx" : "unknown";
 
         string arch = RuntimeInformation.ProcessArchitecture switch
-        {
+        {   
             Architecture.X64 => "x64",
             Architecture.X86 => "x86",
             Architecture.Arm64 => "arm64",
