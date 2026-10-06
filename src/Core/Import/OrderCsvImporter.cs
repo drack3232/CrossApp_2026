@@ -45,14 +45,20 @@ public static class OrderCsvImporter
         return parts switch
         {
             { Length: < 4 } => new ParseFailed($"очікую щонайменше 4 колонки, отримав {parts.Length}"),
+
             [_, "", _, _, ..] => new ParseFailed("Ім'я клієнта порожнє"),
+
             [_, _, "", _, ..] => new ParseFailed("Адреса порожня"),
+
             [_, _, _, var priceStr, ..] when !decimal.TryParse(priceStr, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal price) || price < 0
                 => new ParseFailed($"ціна '{priceStr}' не є невід'ємним числом"),
+
             [var id, var customer, var address, var priceStr] 
                 => new ParseOk(new OrderDto(id, customer, address, decimal.Parse(priceStr, CultureInfo.InvariantCulture))),
+
             [var id, var customer, var address, var priceStr, var comment] 
                 => new ParseOk(new OrderDto(id, customer, address, decimal.Parse(priceStr, CultureInfo.InvariantCulture), string.IsNullOrWhiteSpace(comment) ? null : comment)),
+                
             _ => new ParseFailed($"занадто багато колонок: {parts.Length}")
         };
     }

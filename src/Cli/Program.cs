@@ -1,48 +1,37 @@
-﻿using Core;
-using Core.Dto;
-using Core.Import;
-Console.OutputEncoding = System.Text.Encoding.UTF8;
+﻿using System.Text;
+using Core.Domain;
 
-EnvironmentReport report = EnvironmentInfo.Collect();
+Console.OutputEncoding = Encoding.UTF8;
 
-Console.WriteLine("DrackDrop");
-Console.WriteLine("Студент: Сенів Артем, група ФЕІ-36");
-Console.WriteLine(new string('-', 52));
-Console.WriteLine($"ОС              : {report.OsDescription}");
-Console.WriteLine($"Runtime         : {report.FrameworkDescription}");
-Console.WriteLine($"Архітектура     : {report.ProcessArchitecture}");
-Console.WriteLine($"RID (визначено) : {report.DetectedRid}");
-Console.WriteLine($"RID (від .NET)  : {report.ReportedRid}");
-Console.WriteLine($"Каталог         : {report.BaseDirectory}");
-Console.WriteLine($"Нотатка збірки  : {report.BuildNote}");
-Console.WriteLine(new string('-', 52));
-Console.WriteLine("Предметна область: Замовлення (Customer, Product, Order, OrderLine)");
+Console.WriteLine("Сценарій 1: успіх");
+Order order = Order.Create("O-001", "Відьмак", "Каер Морген", "Терміново");
+order.AddLine("P-01", "Срібний меч", 1500.00m, 1);
+order.AddLine("P-02", "Еліксир Ластівка", 50.50m, 5);
+Console.WriteLine(order);
+order.Confirm();
+Console.WriteLine(order);
+Console.WriteLine();
 
-string path = args.Length > 0 ? args[0] : Path.Combine("data", "sample.csv");
+Console.WriteLine("Сценарій 2: порушення інваріантів");
 
-if (!File.Exists(path))
+TryDo("Додавання до підтвердженого", () => order.AddLine("P-03", "Зілля", 20m, 1));
+
+TryDo("Порожній ID замовлення", () => Order.Create("", "Лютік", "Оксенфурт"));
+
+Order newOrder = Order.Create("O-002", "Геральт", "Новіград");
+TryDo("Від'ємна ціна в рядку", () => newOrder.AddLine("P-04", "Обладунки", -100m, 1));
+
+TryDo("Підтвердження порожнього замовлення", () => newOrder.Confirm());
+
+static void TryDo(string title, Action action)
 {
-    Console.WriteLine($"Файл не знайдено: {Path.GetFullPath(path)}");
-    return 1;
-}
-
-ImportResult<OrderDto> result = OrderCsvImporter.Load(path);
-
-
-Console.WriteLine($"Завантажено записів: {result.Items.Count}");
-foreach (OrderDto o in result.Items.Take(10))
-{
-    Console.WriteLine($"{o.Id,-6} {o.Customer,-20} {o.Price,8} {o.Address}");
-}
-
-
-if (result.Errors.Count > 0)
-{
-    Console.WriteLine($"\nПропущено рядків: {result.Errors.Count}");
-    foreach (string e in result.Errors)
+    try
     {
-        Console.WriteLine($" ! {e}");
+        action();
+        Console.WriteLine($" {title}: виняток НЕ спрацював — інваріант відсутній!");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($" {title}: {ex.GetType().Name} - {ex.Message}");
     }
 }
-
-return 0;
