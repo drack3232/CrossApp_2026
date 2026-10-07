@@ -8,18 +8,27 @@ Purpose: Processing delivery orders and calculating total amounts
 ## Environment
 .NET SDK 10.0, Arch Linux x64
 
-## Інваріанти доменної моделі 
+## Lab 4: Domain Model - Invariants and Encapsulation
 
-1. **Ідентифікатор замовлення та ім'я клієнта не можуть бути порожніми.** 
-   (Перевіряється: `Order.Create`, Кидає: `ArgumentException`).
-2. **Ціна товару не може бути від'ємною.** 
-   (Перевіряється: `OrderLine.Create`, Кидає: `ArgumentOutOfRangeException`).
-3. **Кількість товару в рядку замовлення має бути більшою за нуль.** 
-   (Перевіряється: `OrderLine.Create`, Кидає: `ArgumentOutOfRangeException`).
-4. **Не можна підтвердити замовлення, якщо воно не містить жодного рядка (порожнє).** 
-   (Перевіряється: `Order.Confirm()`, Кидає: `InvalidOperationException`).
-5. **Не можна додавати нові рядки до вже підтвердженого замовлення.** 
-   (Перевіряється: `Order.AddLine()`, Кидає: `InvalidOperationException`)
+**Domain:** Order Management (`Order` and `OrderLine`)
+
+### Domain Invariants (Business Rules)
+
+1. **Order ID and Customer name cannot be empty or whitespace.** 
+   * Method: `Order.Create`
+   * Throws: `ArgumentException`
+2. **Product price cannot be negative.** 
+   * Method: `OrderLine.Create`
+   * Throws: `ArgumentOutOfRangeException`
+3. **Product quantity in an order line must be greater than zero.** 
+   * Method: `OrderLine.Create`
+   * Throws: `ArgumentOutOfRangeException`
+4. **Cannot confirm an empty order (an order containing no items).** 
+   * Method: `Order.Confirm`
+   * Throws: `InvalidOperationException`
+5. **Cannot add new order lines to an already confirmed order.** 
+   * Method: `Order.AddLine`
+   * Throws: `InvalidOperationException`
 
 ## Run
 ```bash
