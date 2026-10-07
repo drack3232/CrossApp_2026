@@ -8,7 +8,7 @@ Purpose: Processing delivery orders and calculating total amounts
 ## Environment
 .NET SDK 10.0, Arch Linux x64
 
-## Інваріанти доменної моделі (Лабораторна 4)
+## Інваріанти доменної моделі 
 
 1. **Ідентифікатор замовлення та ім'я клієнта не можуть бути порожніми.** 
    (Перевіряється: `Order.Create`, Кидає: `ArgumentException`).
