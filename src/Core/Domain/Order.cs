@@ -59,12 +59,55 @@ public sealed class Order
         IsConfirmed = true;
     }
 
-    public OrderDto ToDto() => new(Id, Customer, Address, Total, Comment);
+public OrderDto ToDto()
+{
+    return new OrderDto(
+        Id,
+        Customer,
+        Address,
+        Total,
+        Comment,
+        _lines.Select(line => new OrderLineDto(
+            line.ProductId,
+            line.Name,
+            line.Price,
+            line.Quantity
+        )).ToList(),
+        IsConfirmed
+    );
+}
 
-    public static Order FromDto(OrderDto dto)
+ public static Order FromDto(OrderDto dto)
+{
+    ArgumentNullException.ThrowIfNull(dto);
+
+    var order = Create(
+        dto.Id,
+        dto.Customer,
+        dto.Address,
+        dto.Comment
+    );
+
+    if (dto.Lines != null)
     {
-        return Create(dto.Id, dto.Customer, dto.Address, dto.Comment);
+        foreach (var line in dto.Lines)
+        {
+            order.AddLine(
+                line.ProductId,
+                line.Name,
+                line.Price,
+                line.Quantity
+            );
+        }
     }
+
+    if (dto.IsConfirmed)
+    {
+        order.Confirm();
+    }
+
+    return order;
+}
 
     public override string ToString() => 
         $"{Id} [{Customer}] - Позицій: {Lines.Count}, Сума: {Total:C}, Підтверджено: {IsConfirmed}";

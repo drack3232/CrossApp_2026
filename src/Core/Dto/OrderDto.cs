@@ -5,4 +5,14 @@ public record OrderDto(
     string Customer,
     string Address,
     decimal Price,
-    string? Comment = null);
+    string? Comment = null,
+    List<OrderLineDto>? Lines = null,
+    bool IsConfirmed = false
+    );
+    
+    public record OrderLineDto(
+    string ProductId,
+    string Name,
+    decimal Price,
+    int Quantity
+);
