@@ -6,7 +6,7 @@ using Core.Abstractions;
 using Core.Storage;
 using Core.Services;
 using Core.Events;
-
+using Cli.Notifications;
 Console.OutputEncoding = Encoding.UTF8;
 
 Console.WriteLine("Сценарій 1: успіх");
@@ -51,7 +51,26 @@ IOrderStore store = useFile
     ? new FileOrderStore(dataPath)
     : new InMemoryOrderStore(SampleData.Orders());
 
-var service = new OrderService(store);
+//+1
+string notificationPath = Path.Combine(
+    AppContext.BaseDirectory,
+    "logs",
+    "notifications.log"
+);
+
+INotificationSink? notificationSink = null;
+
+if (args.Contains("--notify-console"))
+{
+    notificationSink = new ConsoleSink();
+}
+else if (args.Contains("--notify-file"))
+{
+    notificationSink = new FileSink(notificationPath);
+}
+
+var service = new OrderService(store, notificationSink);
+
 
 Console.WriteLine($"Сховище: {store.GetType().Name}");
 Console.WriteLine($"Початкова кількість: {service.All().Count}");
@@ -178,6 +197,43 @@ foreach (var item in filteredOrders)
 {
     Console.WriteLine(item);
 }
+
+
+
+//+2
+string csvPath = Path.Combine(
+    AppContext.BaseDirectory,
+    "data",
+    "orders-lab06.csv"
+);
+
+Directory.CreateDirectory(
+    Path.GetDirectoryName(csvPath)!
+);
+
+
+File.WriteAllLines(csvPath, new[]
+{
+    "id;customer;address;price;comment",
+    "O-601;Цірі;Каер Морхен;1500.00;Терміново",
+    "O-602;;Новіград;100.00;Без імені",
+    "O-603;Лютик;Оксенфурт;-50.00;Некоректна ціна"
+});
+
+
+var importResult = Core.Import.OrderCsvImporter.Load(
+    csvPath,
+    message => Console.WriteLine($"Пропущено: {message}")
+);
+
+Console.WriteLine(
+    $"Успішно імпортовано: {importResult.Items.Count}"
+);
+
+Console.WriteLine(
+    $"Помилок імпорту: {importResult.Errors.Count}"
+);
+
 
 static void TryDo(string title, Action action)
 {

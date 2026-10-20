@@ -8,27 +8,31 @@ namespace Core.Services;
 public sealed class OrderService
 {
     private readonly IOrderStore _store;
+    private readonly INotificationSink? _notificationSink;
 
-    public OrderService(IOrderStore store)
+    public OrderService(IOrderStore store,
+    INotificationSink? notificationSink = null)
     {
         _store = store
             ?? throw new ArgumentNullException(nameof(store));
+             _notificationSink = notificationSink;
     }
 
     public event EventHandler<OrderChangedEventArgs>? Changed;
 
     private void OnChanged(Order order, OrderChangeKind kind)
-    {
-        Changed?.Invoke(
-            this,
-            new OrderChangedEventArgs(
-                order.Id,
-                kind,
-                order.Lines.Count,
-                order.Total
-            )
-        );
-    }
+{
+    var eventArgs = new OrderChangedEventArgs(
+        order.Id,
+        kind,
+        order.Lines.Count,
+        order.Total
+    );
+
+    Changed?.Invoke(this, eventArgs);
+
+    _notificationSink?.Notify(eventArgs);
+}
 
     public Order CreateOrder(
         string id,
