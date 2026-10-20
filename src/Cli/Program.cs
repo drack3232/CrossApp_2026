@@ -5,6 +5,7 @@ using Core.Domain;
 using Core.Abstractions;
 using Core.Storage;
 using Core.Services;
+using Core.Events;
 
 Console.OutputEncoding = Encoding.UTF8;
 
@@ -58,12 +59,12 @@ Console.WriteLine($"Початкова кількість: {service.All().Count}
 
 var created = service.CreateOrder(
     Guid.NewGuid().ToString("N")[..8],
-    "Геральт",
-    "Новіград"
+    "Arthas",
+    "lviv"
 );
 
 
-service.AddLine(created.Id, "Срібний меч", 1500m, 1);
+service.AddLine(created.Id, "Tesla Model 3", 18000m, 1);
 
 
 service.Confirm(created.Id);
@@ -96,7 +97,87 @@ foreach (var item in service.All())
 TryDo("Неіснуючий ID",
     () => service.Confirm("UNKNOWN-ID"));
 
+string logPath = Path.Combine(
+    AppContext.BaseDirectory,
+    "logs",
+    "app.log"
+);
 
+Directory.CreateDirectory(
+    Path.GetDirectoryName(logPath)!
+);
+
+void OnOrderChanged(object? sender, OrderChangedEventArgs e)
+{
+    string line =
+        $"{e.At:HH:mm:ss} {e.Kind,-15} " +
+        $"{e.OrderId} | Позицій: {e.LinesCount} | " +
+        $"Сума: {e.Total:0.00}";
+
+    Console.WriteLine(line);
+
+    File.AppendAllText(
+        logPath,
+        line + Environment.NewLine
+    );
+}
+
+service.Changed += OnOrderChanged;
+
+int changes = 0;
+
+service.Changed += (_, _) => changes++;
+
+var created6 = service.CreateOrder(
+    "L6-" + Guid.NewGuid().ToString("N")[..8],
+    "Цірі",
+    "Каер Морхен"
+);
+
+service.AddLine(
+    created6.Id,
+    "Срібний меч",
+    1500m,
+    1
+);
+
+service.Confirm(created6.Id);
+
+Console.WriteLine($"Подій отримано: {changes}");
+
+TryDo(
+    "Неіснуючий ID",
+    () => service.Confirm("UNKNOWN-ID")
+);
+
+Console.WriteLine($"Подій після помилки: {changes}");
+
+service.Changed -= OnOrderChanged;
+
+Console.WriteLine("\nПісля відписки:");
+
+var afterUnsubscribe = service.CreateOrder(
+    "L6-" + Guid.NewGuid().ToString("N")[..8],
+    "Лютик",
+    "Оксенфурт"
+);
+
+Console.WriteLine(
+    $"Створено замовлення: {afterUnsubscribe.Id}"
+);
+
+Console.WriteLine($"Подій отримано: {changes}");
+
+Console.WriteLine("\nЗамовлення із сумою менше 1000:");
+
+var filteredOrders = service.FindAll(
+    o => o.Total < 1000m
+);
+
+foreach (var item in filteredOrders)
+{
+    Console.WriteLine(item);
+}
 
 static void TryDo(string title, Action action)
 {
