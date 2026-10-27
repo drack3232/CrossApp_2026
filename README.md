@@ -69,6 +69,33 @@ No DI container is used.
 - **File:** Orders are saved to `data/orders.json` in the CLI output directory and restored on subsequent runs.
 - Each order is stored together with its lines and confirmation status.
 
+
+### Lab 7 — Optional Tasks
+
+1. GroupJoin combines customers and orders into CustomerOrdersSummary.
+   Customers without orders are included with zero totals.
+
+2. Custom TopBy<T> LINQ extension sorts data by a decimal
+   value and a secondary string key.
+   It is used in TopCustomers and TopOrders.
+
+3. Query syntax uses from, group, into and select.
+   ByStatusQuerySyntax produces the same results as ByStatus.
+   Method syntax is convenient for combining many operators,
+   while query syntax makes grouping easier to read.
+
+4. Stopwatch compares LINQ processing of 100,000 generated
+   orders with and without an intermediate ToList().
+   Both queries calculate the same sum.
+   Intermediate materialization creates an additional list
+   and may increase memory usage and execution time.
+
+Commands:
+- report-join
+- report-top-orders
+- report-query
+- report-bench
+
 ## Run
 
 ### Build
