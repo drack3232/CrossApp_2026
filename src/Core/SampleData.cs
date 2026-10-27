@@ -43,6 +43,7 @@ public static class SampleData
 
         var orders = new List<Order> { o1, o2, o3 };
 
+        // Початкові замовлення: O-104 ... O-115
         for (int i = 4; i <= 15; i++)
         {
             var order = Order.Create(
@@ -59,6 +60,66 @@ public static class SampleData
             );
 
             if (i % 3 == 0)
+            {
+                order.Confirm();
+            }
+
+            orders.Add(order);
+        }
+
+        // Додаткові замовлення для лабораторної №7
+        var additionalOrders = new[]
+        {
+            new
+            {
+                Id = "O-116",
+                Customer = "Геральт з Рівії",
+                Address = "Каер Морхен",
+                Price = 4000m,
+                Confirm = true
+            },
+            new
+            {
+                Id = "O-117",
+                Customer = "Лютик",
+                Address = "Оксенфурт",
+                Price = 3000m,
+                Confirm = false
+            },
+            new
+            {
+                Id = "O-118",
+                Customer = "Йеннефер",
+                Address = "Венгерберг",
+                Price = 2200m,
+                Confirm = false
+            },
+            new
+            {
+                Id = "O-119",
+                Customer = "Клієнт 4",
+                Address = "Новіград",
+                Price = 7000m,
+                Confirm = true
+            }
+        };
+
+        foreach (var item in additionalOrders)
+        {
+            var order = Order.Create(
+                item.Id,
+                item.Customer,
+                item.Address
+            );
+
+            order.AddLine(
+                $"L-{item.Id}",
+                "Додатковий товар",
+                item.Price,
+                1
+            );
+
+            if (item.Confirm)
             {
                 order.Confirm();
             }

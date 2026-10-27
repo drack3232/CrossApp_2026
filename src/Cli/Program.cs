@@ -7,7 +7,161 @@ using Core.Storage;
 using Core.Services;
 using Core.Events;
 using Cli.Notifications;
+using Core.Reports;
 Console.OutputEncoding = Encoding.UTF8;
+
+string? reportCommand = args.FirstOrDefault(
+    a => !a.StartsWith("--", StringComparison.Ordinal)
+);
+
+if (reportCommand is not null &&
+    reportCommand.StartsWith("report-", StringComparison.Ordinal))
+{
+    bool reportUseFile = args.Contains("--file");
+
+    string reportDataPath = Path.Combine(
+        AppContext.BaseDirectory,
+        "data",
+        "orders.json"
+    );
+
+    IOrderStore reportStore = reportUseFile
+        ? new FileOrderStore(reportDataPath)
+        : new InMemoryOrderStore(SampleData.Orders());
+
+    var items = reportStore.List();
+
+    Console.WriteLine($"Сховище: {reportStore.GetType().Name}");
+    Console.WriteLine($"Замовлень: {items.Count}");
+    Console.WriteLine();
+
+    switch (reportCommand)
+    {
+        case "report-top":
+        {
+            Console.WriteLine("ТОП-5 клієнтів за сумою:");
+
+            var result = ReportService.TopCustomers(items, 5);
+
+            foreach (var row in result)
+            {
+                Console.WriteLine(
+                    $"{row.Customer,-22} " +
+                    $"замовлень: {row.OrdersCount,2} | " +
+                    $"сума: {row.TotalAmount,10:F2}"
+                );
+            }
+
+            break;
+        }
+
+        case "report-high":
+        {
+            const decimal threshold = 2000m;
+
+            Console.WriteLine(
+                $"Замовлення дорожче {threshold:F2}:"
+            );
+
+            var result = ReportService.ExpensiveOrders(
+                items,
+                threshold
+            );
+
+            foreach (var row in result)
+            {
+                Console.WriteLine(
+                    $"{row.Id,-12} " +
+                    $"{row.Customer,-22} " +
+                    $"{row.Total,10:F2} | " +
+                    $"Підтверджено: {row.IsConfirmed}"
+                );
+            }
+
+            Console.WriteLine(
+                $"Знайдено: {result.Count}"
+            );
+
+            Console.WriteLine(
+                "Порожнє джерело: " +
+                ReportService.ExpensiveOrders(
+                    Array.Empty<Order>(),
+                    threshold
+                ).Count
+            );
+
+            break;
+        }
+
+        case "report-groups":
+        {
+            Console.WriteLine("Групування за статусом:");
+
+            var result = ReportService.ByStatus(items);
+
+            foreach (var group in result)
+            {
+                Console.WriteLine(
+                    $"{group.Status,-20} " +
+                    $"замовлень: {group.OrdersCount,3} | " +
+                    $"сума: {group.TotalAmount,10:F2}"
+                );
+            }
+
+            break;
+        }
+
+        case "report-sum":
+        {
+            var totals = ReportService.Totals(items);
+
+            Console.WriteLine("Загальна статистика:");
+            Console.WriteLine($"Замовлень: {totals.OrdersCount}");
+            Console.WriteLine($"Загальна сума: {totals.TotalAmount:F2}");
+            Console.WriteLine($"Середній чек: {totals.AverageAmount:F2}");
+            Console.WriteLine($"Максимальне замовлення: {totals.MaxAmount:F2}");
+
+            var empty = ReportService.Totals(
+                Array.Empty<Order>()
+            );
+
+            Console.WriteLine(
+                $"Порожнє джерело: " +
+                $"кількість={empty.OrdersCount}, " +
+                $"середнє={empty.AverageAmount:F2}, " +
+                $"максимум={empty.MaxAmount:F2}"
+            );
+
+            break;
+        }
+
+        case "report-deferred":
+        {
+            var demo = ReportService.DeferredDemo(items);
+
+            Console.WriteLine("Демонстрація відкладеного виконання:");
+            Console.WriteLine($"До додавання: {demo.Before}");
+            Console.WriteLine($"Після додавання: {demo.After}");
+            Console.WriteLine(
+                $"Знімок після Clear: {demo.SnapshotAfterClear}"
+            );
+            Console.WriteLine(
+                $"Запит після Clear: {demo.QueryAfterClear}"
+            );
+
+            break;
+        }
+
+        default:
+            Console.WriteLine(
+                "Доступні команди: report-top | report-high | " +
+                "report-groups | report-sum | report-deferred"
+            );
+            break;
+    }
+
+    return;
+}
 
 Console.WriteLine("Сценарій 1: успіх");
 
@@ -160,6 +314,7 @@ service.AddLine(
     1
 );
 
+//+
 service.Confirm(created6.Id);
 
 Console.WriteLine($"Подій отримано: {changes}");
