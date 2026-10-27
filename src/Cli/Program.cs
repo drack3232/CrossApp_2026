@@ -151,7 +151,100 @@ if (reportCommand is not null &&
 
             break;
         }
+         case "report-join":
+{
+    Console.WriteLine("GroupJoin: клієнти та їхні замовлення");
 
+    var customers = new[]
+    {
+        "Геральт з Рівії",
+        "Лютик",
+        "Йеннефер",
+        "Клієнт 4",
+        "Клієнт без замовлень"
+    };
+
+    var result = ReportService.CustomersWithOrders(
+        customers,
+        items
+    );
+
+    foreach (var row in result)
+    {
+        Console.WriteLine(
+            $"{row.Customer,-24} | " +
+            $"замовлень: {row.OrdersCount,3} | " +
+            $"сума: {row.TotalAmount,10:F2}"
+        );
+    }
+
+    break;
+}
+
+case "report-top-orders":
+{
+    Console.WriteLine("ТОП-5 замовлень за сумою:");
+
+    var result = ReportService.TopOrders(items, 5);
+
+    foreach (var row in result)
+    {
+        Console.WriteLine(
+            $"{row.Id,-12} | " +
+            $"{row.Customer,-22} | " +
+            $"{row.Total,10:F2}"
+        );
+    }
+
+    break;
+}
+
+case "report-query":
+{
+    Console.WriteLine("LINQ Query Syntax:");
+
+    var result = ReportService.ByStatusQuerySyntax(items);
+
+    foreach (var row in result)
+    {
+        Console.WriteLine(
+            $"{row.Status,-20} | " +
+            $"замовлень: {row.OrdersCount,3} | " +
+            $"сума: {row.TotalAmount,10:F2}"
+        );
+    }
+
+    var methodResult = ReportService.ByStatus(items);
+
+    Console.WriteLine(
+        "Результати збігаються: " +
+        result.SequenceEqual(methodResult)
+    );
+
+    break;
+}
+
+case "report-bench":
+{
+    Console.WriteLine("Порівняння LINQ на 100 000 записів:");
+
+    var result = ReportBenchmarks.Compare(100_000);
+
+    Console.WriteLine($"Кількість: {result.Records}");
+    Console.WriteLine($"Контрольна сума: {result.Sum:F2}");
+
+    Console.WriteLine(
+        $"Без проміжного ToList: " +
+        $"{result.WithoutListMs:F3} мс"
+    );
+
+    Console.WriteLine(
+        $"Із проміжним ToList: " +
+        $"{result.WithListMs:F3} мс"
+    );
+
+    break;
+}
         default:
             Console.WriteLine(
                 "Доступні команди: report-top | report-high | " +

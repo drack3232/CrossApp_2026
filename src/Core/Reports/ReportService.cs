@@ -1,9 +1,11 @@
+
 using Core.Domain;
 
 namespace Core.Reports;
 
 public static class ReportService
 {
+   
     public static IReadOnlyList<CustomerTotalLine> TopCustomers(
         IEnumerable<Order> source,
         int n)
@@ -15,9 +17,11 @@ public static class ReportService
                 g.Count(),
                 g.Sum(o => o.Total)
             ))
-            .OrderByDescending(x => x.TotalAmount)
-            .ThenBy(x => x.Customer, StringComparer.Ordinal)
-            .Take(n)
+            .TopBy(
+                x => x.TotalAmount,
+                n,
+                x => x.Customer
+            )
             .ToList();
     }
 
@@ -58,9 +62,7 @@ public static class ReportService
         var orders = source.ToList();
 
         if (orders.Count == 0)
-        {
             return new OrderTotals(0, 0m, 0m, 0m);
-        }
 
         return new OrderTotals(
             orders.Count,
@@ -110,5 +112,66 @@ public static class ReportService
             snapshot.Count,
             query.Count()
         );
+    }
+
+    // ++1
+    public static IReadOnlyList<CustomerOrdersSummary> CustomersWithOrders(
+        IEnumerable<string> customers,
+        IEnumerable<Order> orders)
+    {
+        return customers
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .GroupJoin(
+                orders,
+                customer => customer,
+                order => order.Customer,
+                (customer, customerOrders) => new CustomerOrdersSummary(
+                    customer,
+                    customerOrders.Count(),
+                    customerOrders.Sum(o => o.Total)
+                ),
+                StringComparer.OrdinalIgnoreCase
+            )
+            .OrderByDescending(x => x.TotalAmount)
+            .ThenBy(x => x.Customer, StringComparer.Ordinal)
+            .ToList();
+    }
+
+//++2
+    public static IReadOnlyList<OrderAmountLine> TopOrders(
+        IEnumerable<Order> source,
+        int n)
+    {
+        return source
+            .TopBy(
+                o => o.Total,
+                n,
+                o => o.Id
+            )
+            .Select(o => new OrderAmountLine(
+                o.Id,
+                o.Customer,
+                o.Total,
+                o.IsConfirmed
+            ))
+            .ToList();
+    }
+
+    // ++3
+    public static IReadOnlyList<StatusSummary> ByStatusQuerySyntax(
+        IEnumerable<Order> source)
+    {
+        var query =
+            from order in source
+            group order by order.IsConfirmed into g
+            select new StatusSummary(
+                g.Key ? "Підтверджено" : "Не підтверджено",
+                g.Count(),
+                g.Sum(o => o.Total)
+            );
+
+        return query
+            .OrderBy(x => x.Status, StringComparer.Ordinal)
+            .ToList();
     }
 }
