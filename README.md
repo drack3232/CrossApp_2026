@@ -96,6 +96,33 @@ Commands:
 - report-query
 - report-bench
 
+### Lab 7 — LINQ Query Syntax
+
+Implemented two versions of the order status grouping report in `ReportService.cs`:
+
+- **Method Syntax (`ByStatus`)** — uses `GroupBy()`, `Select()`, `OrderBy()` and `ToList()`.
+- **Query Syntax (`ByStatusQuerySyntax`)** — uses `from`, `group`, `into` and `select`.
+
+Both methods group orders by confirmation status and calculate the number of orders and their total amount for each group.
+
+**Readability comparison:**
+
+Method Syntax is more convenient for building chains of LINQ operations and is generally more compact.
+
+Query Syntax resembles SQL and makes grouping operations easier to understand, especially when using `group ... into`.
+
+Both approaches produce the same results.
+
+**Verification command:**
+
+`dotnet run --project src/Cli -- report-query`
+
+**Expected result:**
+
+`Результати збігаються: True`
+
+The comparison is performed using `SequenceEqual()`, which checks whether both reports contain equal elements in the same order.
+
 ## Run
 
 ### Build
