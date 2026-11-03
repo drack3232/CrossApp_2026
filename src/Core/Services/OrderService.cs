@@ -86,6 +86,50 @@ public sealed class OrderService
     }
 
 
+public async Task<int> ImportAsync(
+    IOrderLineImporter importer,
+    string path,
+    CancellationToken ct = default)
+{
+    ArgumentNullException.ThrowIfNull(importer);
+
+    var lines = await importer.LoadAsync(path, ct);
+    int added = 0;
+
+    foreach (var line in lines)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        var order = _store.GetById(line.OrderId)
+            ?? throw new Core.DomainException(
+                $"Замовлення {line.OrderId} не знайдено."
+            );
+
+        bool exists = order.Lines.Any(
+            x => x.ProductId == line.ProductId
+        );
+
+        if (exists)
+            continue;
+
+        order.AddLine(
+            line.ProductId,
+            line.Name,
+            line.Price,
+            line.Quantity
+        );
+
+        _store.Update(order);
+
+     
+        OnChanged(order, OrderChangeKind.LineAdded);
+
+        added++;
+    }
+
+    return added;
+}
+
     public IReadOnlyList<Order> All() => _store.List();
 
     public Order? Find(string id) => _store.GetById(id);

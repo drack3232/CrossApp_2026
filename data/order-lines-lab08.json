@@ -1,0 +1,16 @@
+[
+  {
+    "OrderId": "O-103",
+    "ProductId": "L8-001",
+    "Name": "Магічне зілля",
+    "Price": 200.50,
+    "Quantity": 2
+  },
+  {
+    "OrderId": "O-104",
+    "ProductId": "L8-002",
+    "Name": "Ремкомплект",
+    "Price": 75.00,
+    "Quantity": 1
+  }
+]

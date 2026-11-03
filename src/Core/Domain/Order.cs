@@ -44,8 +44,9 @@ public sealed class Order
     public void AddLine(string productId, string name, decimal price, int quantity)
     {
         if (IsConfirmed)
-            throw new InvalidOperationException($"Замовлення {Id} вже підтверджене, рядки додавати не можна");
-
+ throw new Core.DomainException(
+        $"Замовлення {Id} вже підтверджене, рядки додавати не можна"
+    );
         var line = OrderLine.Create(productId, name, price, quantity);
         _lines.Add(line);
     }
@@ -54,8 +55,9 @@ public sealed class Order
     public void Confirm()
     {
         if (_lines.Count == 0)
-            throw new InvalidOperationException($"Неможливо підтвердити порожнє замовлення {Id}");
-            
+ throw new Core.DomainException(
+        $"Неможливо підтвердити порожнє замовлення {Id}"
+    );            
         IsConfirmed = true;
     }
 

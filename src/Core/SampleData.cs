@@ -43,7 +43,6 @@ public static class SampleData
 
         var orders = new List<Order> { o1, o2, o3 };
 
-        // Початкові замовлення: O-104 ... O-115
         for (int i = 4; i <= 15; i++)
         {
             var order = Order.Create(
@@ -67,7 +66,6 @@ public static class SampleData
             orders.Add(order);
         }
 
-        // Додаткові замовлення для лабораторної №7
         var additionalOrders = new[]
         {
             new

@@ -8,6 +8,8 @@ using Core.Services;
 using Core.Events;
 using Cli.Notifications;
 using Core.Reports;
+using Core.Import;
+
 Console.OutputEncoding = Encoding.UTF8;
 
 string? reportCommand = args.FirstOrDefault(
@@ -255,6 +257,93 @@ case "report-bench":
 
     return;
 }
+
+
+ // Лабораторна №8 — асинхронний імпорт
+if (args.Contains("--import"))
+{
+    int importIndex = Array.IndexOf(args, "--import");
+
+    string importPath =
+        importIndex + 1 < args.Length &&
+        !args[importIndex + 1].StartsWith("--")
+            ? args[importIndex + 1]
+            : Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "data",
+                "order-lines-lab08.json"
+            );
+
+    bool importUseFile = args.Contains("--file");
+
+    string storePath = Path.Combine(
+        AppContext.BaseDirectory,
+        "data",
+        "orders.json"
+    );
+
+    IOrderStore importStore = importUseFile
+        ? new FileOrderStore(storePath)
+        : new InMemoryOrderStore(SampleData.Orders());
+
+    var importService = new OrderService(importStore);
+
+    using var cts = new CancellationTokenSource();
+
+    ConsoleCancelEventHandler cancelHandler = (_, e) =>
+    {
+        e.Cancel = true;
+        cts.Cancel();
+    };
+
+    Console.CancelKeyPress += cancelHandler;
+
+    try
+    {
+        var importer = new JsonOrderLineImporter();
+
+        int added = await importService.ImportAsync(
+            importer,
+            importPath,
+            cts.Token
+        );
+
+        Console.WriteLine($"Імпортовано записів: {added}");
+
+        int repeated = await importService.ImportAsync(
+            importer,
+            importPath,
+            cts.Token
+        );
+
+        Console.WriteLine(
+            $"Повторний імпорт: {repeated} нових записів"
+        );
+    }
+    catch (OperationCanceledException)
+    {
+        Console.WriteLine("Імпорт скасовано.");
+    }
+    catch (Core.DomainException ex)
+    {
+        Console.WriteLine($"Дані відхилено: {ex.Message}");
+    }
+    catch (FileNotFoundException)
+    {
+        Console.WriteLine($"Файл не знайдено: {importPath}");
+    }
+    catch (System.Text.Json.JsonException ex)
+    {
+        Console.WriteLine($"Помилка формату JSON: {ex.Message}");
+    }
+    finally
+    {
+        Console.CancelKeyPress -= cancelHandler;
+    }
+
+    return;
+}
+
 
 Console.WriteLine("Сценарій 1: успіх");
 
