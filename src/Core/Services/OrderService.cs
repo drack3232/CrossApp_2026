@@ -130,6 +130,88 @@ public async Task<int> ImportAsync(
     return added;
 }
 
+
+public async Task<int> ImportStreamingAsync(
+    IStreamingOrderLineImporter importer,
+    string path,
+    int expectedCount,
+    IProgress<int>? progress = null,
+    CancellationToken ct = default)
+{
+    ArgumentNullException.ThrowIfNull(importer);
+
+    if (expectedCount <= 0)
+        throw new ArgumentOutOfRangeException(nameof(expectedCount));
+
+    int processed = 0;
+    int added = 0;
+    int lastPercent = -1;
+
+    void ReportPercent(int percent)
+    {
+        if (percent == lastPercent)
+            return;
+
+        lastPercent = percent;
+        progress?.Report(percent);
+    }
+
+    ct.ThrowIfCancellationRequested();
+    ReportPercent(0);
+
+    await foreach (var line in importer
+        .StreamAsync(path, ct)
+        .WithCancellation(ct))
+    {
+        ct.ThrowIfCancellationRequested();
+
+        var order = _store.GetById(line.OrderId)
+            ?? throw new Core.DomainException(
+                $"Замовлення {line.OrderId} не знайдено."
+            );
+
+        bool exists = order.Lines.Any(
+            x => x.ProductId == line.ProductId
+        );
+
+        if (!exists)
+        {
+            order.AddLine(
+                line.ProductId,
+                line.Name,
+                line.Price,
+                line.Quantity
+            );
+
+            _store.Update(order);
+            OnChanged(order, OrderChangeKind.LineAdded);
+
+            added++;
+        }
+
+        processed++;
+
+        int percent = (int)Math.Min(
+            100L,
+            (long)processed * 100 / expectedCount
+        );
+
+        ReportPercent(percent);
+    }
+
+    ct.ThrowIfCancellationRequested();
+
+    if (processed != expectedCount)
+        throw new Core.DomainException(
+            $"Очікувалося {expectedCount} записів, знайдено {processed}."
+        );
+
+    ReportPercent(100);
+
+    return added;
+}
+
+
     public IReadOnlyList<Order> All() => _store.List();
 
     public Order? Find(string id) => _store.GetById(id);

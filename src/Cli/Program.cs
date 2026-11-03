@@ -259,7 +259,131 @@ case "report-bench":
 }
 
 
- // Лабораторна №8 — асинхронний імпорт
+
+if (args.Contains("--import-stream"))
+{
+    int streamIndex = Array.IndexOf(args, "--import-stream");
+
+    string streamPath =
+        streamIndex + 1 < args.Length &&
+        !args[streamIndex + 1].StartsWith("--")
+            ? args[streamIndex + 1]
+            : Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "data",
+                "order-lines-lab08.json"
+            );
+
+    int ReadNumber(string option, int fallback)
+    {
+        int index = Array.IndexOf(args, option);
+
+        if (index < 0)
+            return fallback;
+
+        if (index + 1 >= args.Length ||
+            !int.TryParse(args[index + 1], out int value) ||
+            value < 0)
+        {
+            throw new ArgumentException(
+                $"Некоректне значення {option}."
+            );
+        }
+
+        return value;
+    }
+
+    int expectedCount = ReadNumber("--expected", 2);
+    int timeoutMs = ReadNumber("--timeout-ms", 0);
+    int delayMs = ReadNumber("--delay-ms", 0);
+
+    if (expectedCount == 0)
+    {
+        Console.WriteLine("Кількість записів має бути більшою за 0.");
+        return;
+    }
+
+    string streamStorePath = Path.Combine(
+        AppContext.BaseDirectory,
+        "data",
+        "orders.json"
+    );
+
+    IOrderStore streamStore = args.Contains("--file")
+        ? new FileOrderStore(streamStorePath)
+        : new InMemoryOrderStore(SampleData.Orders());
+
+    var streamService = new OrderService(streamStore);
+    var streamImporter = new JsonStreamingOrderLineImporter(delayMs);
+    var streamProgress = new ConsoleImportProgress();
+
+    using var userCts = new CancellationTokenSource();
+    using var timeoutCts = new CancellationTokenSource();
+
+    using var linkedCts =
+        CancellationTokenSource.CreateLinkedTokenSource(
+            userCts.Token,
+            timeoutCts.Token
+        );
+
+    ConsoleCancelEventHandler streamCancelHandler = (_, e) =>
+    {
+        e.Cancel = true;
+        userCts.Cancel();
+    };
+
+    Console.CancelKeyPress += streamCancelHandler;
+
+    try
+    {
+        if (timeoutMs > 0)
+            timeoutCts.CancelAfter(timeoutMs);
+
+        int added = await streamService.ImportStreamingAsync(
+            streamImporter,
+            streamPath,
+            expectedCount,
+            streamProgress,
+            linkedCts.Token
+        );
+
+        Console.WriteLine($"Імпортовано записів: {added}");
+    }
+    catch (OperationCanceledException)
+        when (timeoutCts.IsCancellationRequested &&
+              !userCts.IsCancellationRequested)
+    {
+        Console.WriteLine("Імпорт скасовано через тайм-аут.");
+    }
+    catch (OperationCanceledException)
+    {
+        Console.WriteLine("Імпорт скасовано.");
+    }
+    catch (Core.DomainException ex)
+    {
+        Console.WriteLine($"Дані відхилено: {ex.Message}");
+    }
+    catch (FileNotFoundException)
+    {
+        Console.WriteLine($"Файл не знайдено: {streamPath}");
+    }
+    catch (System.Text.Json.JsonException ex)
+    {
+        Console.WriteLine($"Помилка JSON: {ex.Message}");
+    }
+    catch (IOException ex)
+    {
+        Console.WriteLine($"Помилка читання: {ex.Message}");
+    }
+    finally
+    {
+        Console.CancelKeyPress -= streamCancelHandler;
+    }
+
+    return;
+}
+
+
 if (args.Contains("--import"))
 {
     int importIndex = Array.IndexOf(args, "--import");

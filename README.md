@@ -69,6 +69,60 @@ No DI container is used.
 - **File:** Orders are saved to `data/orders.json` in the CLI output directory and restored on subsequent runs.
 - Each order is stored together with its lines and confirmation status.
 
+
+### Lab 7 — Optional Tasks
+
+1. GroupJoin combines customers and orders into CustomerOrdersSummary.
+   Customers without orders are included with zero totals.
+
+2. Custom TopBy<T> LINQ extension sorts data by a decimal
+   value and a secondary string key.
+   It is used in TopCustomers and TopOrders.
+
+3. Query syntax uses from, group, into and select.
+   ByStatusQuerySyntax produces the same results as ByStatus.
+   Method syntax is convenient for combining many operators,
+   while query syntax makes grouping easier to read.
+
+4. Stopwatch compares LINQ processing of 100,000 generated
+   orders with and without an intermediate ToList().
+   Both queries calculate the same sum.
+   Intermediate materialization creates an additional list
+   and may increase memory usage and execution time.
+
+Commands:
+- report-join
+- report-top-orders
+- report-query
+- report-bench
+
+### Lab 7 — LINQ Query Syntax
+
+Implemented two versions of the order status grouping report in `ReportService.cs`:
+
+- **Method Syntax (`ByStatus`)** — uses `GroupBy()`, `Select()`, `OrderBy()` and `ToList()`.
+- **Query Syntax (`ByStatusQuerySyntax`)** — uses `from`, `group`, `into` and `select`.
+
+Both methods group orders by confirmation status and calculate the number of orders and their total amount for each group.
+
+**Readability comparison:**
+
+Method Syntax is more convenient for building chains of LINQ operations and is generally more compact.
+
+Query Syntax resembles SQL and makes grouping operations easier to understand, especially when using `group ... into`.
+
+Both approaches produce the same results.
+
+**Verification command:**
+
+`dotnet run --project src/Cli -- report-query`
+
+**Expected result:**
+
+`Результати збігаються: True`
+
+The comparison is performed using `SequenceEqual()`, which checks whether both reports contain equal elements in the same order.
+
 ## Run
 
 ### Build
