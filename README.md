@@ -9,31 +9,6 @@ The system allows users to create orders, add products, calculate order totals, 
 **Platform:** .NET 8 / .NET 10  
 **Development environment:** Arch Linux x64, VS Code
 
-## 1. Project Structure
-
-```text
-CrossApp_2026/
-├── src/
-│   ├── Core/
-│   │   ├── Domain/
-│   │   ├── Abstractions/
-│   │   ├── Services/
-│   │   ├── Storage/
-│   │   ├── Reports/
-│   │   ├── Import/
-│   │   └── Configuration/
-│   └── Cli/
-│       ├── Configuration/
-│       ├── Notifications/
-│       ├── Program.cs
-│       ├── appsettings.json
-│       ├── appsettings.Development.json
-│       └── appsettings.Production.json
-├── tests/
-│   └── Core.Tests/
-├── CrossApp.slnx
-└── README.md
-```
 
 `Core` contains business logic, domain models, services, storage implementations, and reports.
 
@@ -41,7 +16,7 @@ CrossApp_2026/
 
 `Core.Tests` contains automated tests using xUnit.
 
-## 2. Domain Invariants
+## 1. Domain Invariants
 
 The application enforces the following business rules:
 
@@ -55,7 +30,7 @@ Invalid method arguments cause `ArgumentException` or `ArgumentOutOfRangeExcepti
 
 Business rule violations, such as modifying a confirmed order, cause `DomainException`.
 
-## 3. Storage and Dependency Injection
+## 2. Storage and Dependency Injection
 
 The application uses the `IOrderStore` interface with the following operations:
 
@@ -98,7 +73,7 @@ dotnet run --project src/Cli -- --file
 
 File storage preserves orders, their lines, and confirmation status between application runs.
 
-## 4. Lab 6 — Events
+## 3. Lab 6 — Events
 
 `OrderService` provides the `Changed` event.
 
@@ -108,7 +83,7 @@ The CLI supports event subscriptions and notifications through console or file o
 
 The implementation also includes an optional CSV importer with error reporting.
 
-## 5. Lab 7 — LINQ Reports
+## 4. Lab 7 — LINQ Reports
 
 LINQ to Objects is used to filter, group, sort, and aggregate order data.
 
@@ -167,7 +142,7 @@ Expected result:
 
 Command: `report-bench`
 
-## 6. Lab 8 — Async/Await and Unit Tests
+## 5. Lab 8 — Async/Await and Unit Tests
 
 Asynchronous JSON import of order lines is implemented using `FileStream`, `JsonSerializer.DeserializeAsync()`, and `async/await`.
 
@@ -216,7 +191,7 @@ Code coverage:
 dotnet test tests/Core.Tests/Core.Tests.csproj --collect:"XPlat Code Coverage"
 ```
 
-## 7. Lab 9 — Paths, JSON, Configuration, Secrets
+## 6. Lab 9 — Paths, JSON, Configuration, Secrets
 
 Application settings are loaded from JSON configuration files with support for environment variables, command-line arguments, and User Secrets.
 
@@ -401,7 +376,7 @@ Verified test results:
 | Lab 9 tests | 5 | 0 |
 | All project tests | 18 | 0 |
 
-## 8. Error Handling
+## 7. Error Handling
 
 The application uses specific exception types:
 
@@ -413,7 +388,7 @@ The application uses specific exception types:
 
 Invalid configuration is handled with a clear error message and exit code `2`.
 
-## 9. Data and Security
+## 8. Data and Security
 
 Runtime data files and temporary files should be excluded from Git through `.gitignore`.
 
