@@ -12,6 +12,40 @@ using Core.Import;
 
 Console.OutputEncoding = Encoding.UTF8;
 
+
+Cli.Configuration.RuntimeConfiguration runtime;
+
+try
+{
+    runtime = Cli.Configuration.RuntimeConfiguration.Load(args);
+}
+catch (Exception ex) when (
+    ex is ArgumentException or
+    IOException or
+    System.Text.Json.JsonException)
+{
+    Console.Error.WriteLine(
+        $"Некоректна конфігурація: {ex.Message}"
+    );
+
+    Environment.ExitCode = 2;
+    return;
+}
+
+Console.WriteLine($"Профіль: {runtime.Options.EnvironmentName}");
+Console.WriteLine($"Логування: {runtime.Options.Logging.MinimumLevel}");
+Console.WriteLine($"Валюта: {runtime.Options.Orders.Currency}");
+Console.WriteLine($"Файл даних: {runtime.DataFilePath}");
+
+Console.WriteLine(
+    runtime.ApiKey is null
+        ? "ApiKey: не заданий"
+        : $"ApiKey: присутній, довжина {runtime.ApiKey.Length}"
+);
+
+if (Cli.Lab09Commands.TryHandle(args, runtime))
+    return;
+
 string? reportCommand = args.FirstOrDefault(
     a => !a.StartsWith("--", StringComparison.Ordinal)
 );
@@ -21,11 +55,7 @@ if (reportCommand is not null &&
 {
     bool reportUseFile = args.Contains("--file");
 
-    string reportDataPath = Path.Combine(
-        AppContext.BaseDirectory,
-        "data",
-        "orders.json"
-    );
+    string reportDataPath = runtime.JsonStorePath;
 
     IOrderStore reportStore = reportUseFile
         ? new FileOrderStore(reportDataPath)
@@ -265,14 +295,16 @@ if (args.Contains("--import-stream"))
     int streamIndex = Array.IndexOf(args, "--import-stream");
 
     string streamPath =
-        streamIndex + 1 < args.Length &&
-        !args[streamIndex + 1].StartsWith("--")
-            ? args[streamIndex + 1]
-            : Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "data",
-                "order-lines-lab08.json"
-            );
+    streamIndex + 1 < args.Length &&
+    !args[streamIndex + 1].StartsWith("--")
+        ? args[streamIndex + 1]
+        : Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "data",
+            "order-lines-lab08.json"
+        );
+
+  string streamStorePath = runtime.JsonStorePath;
 
     int ReadNumber(string option, int fallback)
     {
@@ -303,11 +335,6 @@ if (args.Contains("--import-stream"))
         return;
     }
 
-    string streamStorePath = Path.Combine(
-        AppContext.BaseDirectory,
-        "data",
-        "orders.json"
-    );
 
     IOrderStore streamStore = args.Contains("--file")
         ? new FileOrderStore(streamStorePath)
@@ -500,11 +527,7 @@ Console.WriteLine(newOrder);
 
 bool useFile = args.Contains("--file");
 
-string dataPath = Path.Combine(
-    AppContext.BaseDirectory,
-    "data",
-    "orders.json"
-);
+string dataPath = runtime.JsonStorePath;
 
 //DI manuale
 IOrderStore store = useFile
