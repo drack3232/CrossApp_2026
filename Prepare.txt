@@ -1,0 +1,38 @@
+2 завд.
+З проекту 
+dotnet run --project src/Cli -- export
+
+з sln
+cd src/Cli
+dotnet run -- export
+cd ../..
+
+3 завд
+CROSSAPP_DATA_PATH=/tmp/crossapp-defense dotnet run --project src/Cli -- export
+ls /tmp/crossapp-defense/
+code /tmp/crossapp-defense/orders.json
+
+4 завд
+ls -la /tmp/crossapp-defense/
+
+git grep -n -F "local-dev-key"
+
+UserSecrets
+dotnet user-secrets list --project src/Cli
+dotnet run --project src/Cli -- export
+
+Option
+1)
+dotnet run --project src/Cli -- export --Storage:FileName=wrong.txt
+echo $?
+2)
+CROSSAPP_DATA_PATH=/tmp/crossapp-env dotnet run --project src/Cli -- export --data-path=/tmp/crossapp-arg
+ls /tmp/crossapp-arg/
+3)JSON
+dotnet run --project src/Cli -- export
+dotnet run --project src/Cli -- import-all
+CV
+CROSSAPP_Storage__Format=csv CROSSAPP_Storage__FileName=orders12.csv dotnet run --project src/Cli -- export
+CROSSAPP_Storage__Format=csv CROSSAPP_Storage__FileName=orders.csv dotnet run --project src/Cli -- import-all
+4)
+dotnet test tests/Core.Tests/Core.Tests.csproj --filter "FullyQualifiedName~Lab09StorageTests"

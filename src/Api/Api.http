@@ -1,0 +1,65 @@
+@host = http://localhost:5080
+GET {{host}}/health
+
+# @name createOrder
+POST {{host}}/api/orders
+Content-Type: application/json
+
+{
+  "customer": "Геральт з Рівії",
+  "address": "Каер Морхен",
+  "comment": "Терміново",
+  "isConfirmed": false,
+  "lines": [
+    {
+      "productId": "P-01",
+      "name": "Срібний меч",
+      "price": 1500.00,
+      "quantity": 1
+    },
+    {
+      "productId": "P-02",
+      "name": "Зілля Ластівка",
+      "price": 150.00,
+      "quantity": 3
+    }
+  ]
+}
+
+POST {{host}}/api/orders
+Content-Type: application/json
+
+{
+  "customer": "",
+  "address": "",
+  "lines": []
+}
+
+GET {{host}}/api/orders
+
+@orderId = {{createOrder.response.body.$.id}}
+GET {{host}}/api/orders/{{orderId}}
+
+GET {{host}}/api/orders/{{orderId}}/total
+
+PUT {{host}}/api/orders/{{orderId}}
+Content-Type: application/json
+
+{
+  "customer": "Геральт з Рівії",
+  "address": "Новіград",
+  "comment": "Підтверджено клієнтом",
+  "isConfirmed": true,
+  "lines": [
+    {
+      "productId": "P-01",
+      "name": "Срібний меч",
+      "price": 1500.00,
+      "quantity": 1
+    }
+  ]
+}
+
+DELETE {{host}}/api/orders/{{orderId}}
+
+GET {{host}}/api/orders/{{orderId}}
