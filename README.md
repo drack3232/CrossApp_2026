@@ -150,3 +150,33 @@ The `orders.json` file is created automatically when running in file mode.
 Invalid operations are handled using exceptions.
 
 The CLI demonstrates error handling for domain invariant violations and operations involving non-existent orders.
+
+Run Minimal API (Lab 10)
+Bash
+dotnet run --project src/Api --urls http://localhost:5080
+Scalar UI: http://localhost:5080/scalar/v1
+
+OpenAPI Spec: http://localhost:5080/openapi/v1.json
+
+Example curl Verification
+Bash
+# Create an order (201 Created + Location header)
+curl -i -X POST http://localhost:5080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"customer":"Геральт з Рівії","address":"Каер Морхен","isConfirmed":true,"lines":[{"productId":"P-01","name":"Срібний меч","price":1500,"quantity":1}]}'
+
+# Paginated search (200 OK)
+curl -i -G http://localhost:5080/api/orders \
+  --data-urlencode "page=1" \
+  --data-urlencode "pageSize=10" \
+  --data-urlencode "search=Геральт"
+
+# Validation error (400 Bad Request)
+curl -i -X POST http://localhost:5080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"customer":"","address":"","lines":[]}'
+
+# Domain rule violation on confirmed order (409 Conflict)
+curl -i -X POST http://localhost:5080/api/orders/<ORDER_ID>/lines \
+  -H "Content-Type: application/json" \
+  -d '{"productId":"P-02","name":"Зілля Ластівка","price":200,"quantity":1}'
