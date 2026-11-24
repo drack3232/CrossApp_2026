@@ -9,7 +9,7 @@ using Core.Events;
 using Cli.Notifications;
 using Core.Reports;
 using Core.Import;
-
+using Microsoft.EntityFrameworkCore;
 Console.OutputEncoding = Encoding.UTF8;
 
 
@@ -49,6 +49,54 @@ if (Cli.Lab09Commands.TryHandle(args, runtime))
 string? reportCommand = args.FirstOrDefault(
     a => !a.StartsWith("--", StringComparison.Ordinal)
 );
+
+//++3
+
+if (args.Length > 0 && args[0] == "import-json")
+{
+    var jsonPath = args.Length > 1
+        ? args[1]
+        : Path.Combine(AppContext.BaseDirectory, "data", "orders.json");
+
+    var dbPath = args.Length > 2
+        ? args[2]
+        : Path.GetFullPath(Path.Combine("src", "Api", "data", "app.db"));
+
+    if (!File.Exists(jsonPath))
+    {
+        Console.WriteLine($"JSON-файл не знайдено: {jsonPath}");
+        return;
+    }
+
+    Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+    var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Infrastructure.Persistence.AppDbContext>()
+        .UseSqlite($"Data Source={dbPath}")
+        .Options;
+
+    using var db = new Infrastructure.Persistence.AppDbContext(options);
+    db.Database.Migrate();
+
+    var jsonStore = new FileOrderStore(jsonPath);
+    var efStore = new Infrastructure.EfOrderStore(db);
+
+    var imported = 0;
+    var skipped = 0;
+   foreach (var item in jsonStore.List())
+{
+    if (efStore.GetById(item.Id) is not null)
+    {
+        skipped++;
+        continue;
+    }
+
+    efStore.Add(item);
+    imported++;
+}
+
+    Console.WriteLine($"Імпорт завершено. Додано: {imported}, пропущено дублікатів: {skipped}.");
+    return;
+}
+
 
 if (reportCommand is not null &&
     reportCommand.StartsWith("report-", StringComparison.Ordinal))

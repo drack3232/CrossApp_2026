@@ -17,6 +17,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         order.Property(o => o.Comment).HasMaxLength(500);
         order.Property(o => o.IsConfirmed).IsRequired();
 
+// ++1
+order.Property(o => o.CreatedAt).IsRequired();
+order.HasIndex(o => o.Customer);
+
         order.HasMany(o => o.Lines)
             .WithOne(l => l.Order)
             .HasForeignKey(l => l.OrderId)

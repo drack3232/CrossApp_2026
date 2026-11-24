@@ -38,6 +38,18 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    if (app.Environment.IsDevelopment())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+
+        var store = scope.ServiceProvider.GetRequiredService<IOrderStore>();
+        DbSeeder.Seed(db, store);
+    }
+}
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
